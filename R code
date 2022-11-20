@@ -1,0 +1,61 @@
+# SETUP ####
+
+library(readxl)
+
+uberdata <- read_excel("uber.xlsx",3)
+
+attach(uberdata)
+
+uberdata$trips_total <- trips_express + trips_pool # total number of shared rides completed
+uberdata$matched_prop <- total_matches / uberdata$trips_total # proportion of shared rides that were matched
+uberdata$double_matched_prop <- total_double_matches / uberdata$trips_total # prop of 3 rider
+uberdata$payout_per_trip <- total_driver_payout / uberdata$trips_total # driver payout per trip on avg in $
+
+attach(uberdata)
+
+# PLOTS ####
+library(ggplot2)
+
+rides_plot <- ggplot(uberdata, aes(x = trips_total, fill = wait_time)) + geom_density(alpha = 0.5) + theme_classic() + theme(legend.position = c(.8,.8)) + ggtitle("Total Ride-Sharing Trips") + labs(fill = "Wait Time")
+rides_plot 
+ggsave("rides_plot.png", rides_plot)
+
+matched_plot <- ggplot(uberdata, aes(x = matched_prop, fill = wait_time)) + geom_density(alpha = 0.5) + theme_classic() + theme(legend.position = c(.8,.8)) + ggtitle("Proportion of Shared Rides Matched") + labs(fill = "Wait Time")
+matched_plot 
+ggsave("matched_plot.png", matched_plot)
+
+double_matched_plot <- ggplot(uberdata, aes(x = double_matched_prop, fill = wait_time)) + geom_density(alpha = 0.5) + theme_classic() + theme(legend.position = c(.8,.8)) + ggtitle("Proportion of Double Shared Rides Matched") + labs(fill = "Wait Time")
+double_matched_plot
+ggsave("double_matched_plot.png", double_matched_plot)
+
+payout_plot <- ggplot(uberdata, aes(x = payout_per_trip, fill = wait_time)) + geom_density(alpha = 0.5) + theme_classic() + theme(legend.position = c(.8,.8)) + ggtitle("Driver Payout per Trip on AVG in $") + labs(fill = "Wait Time")
+payout_plot 
+ggsave("payout_plot.png", payout_plot)
+
+cancellations_plot <- ggplot(uberdata, aes(x = rider_cancellations, fill = wait_time)) + geom_density(alpha = 0.5) + theme_classic() + theme(legend.position = c(.8,.8)) + ggtitle("Rider Cancellations") + labs(fill = "Wait Time")
+cancellations_plot
+ggsave("cancellations_plot.png", cancellations_plot)
+
+# T-TESTS ####
+library(dplyr)
+library(stargazer)
+# Let's create a smaller data frame
+df1 <- uberdata %>%
+  select(trips_pool, wait_time)
+# Let's run a simple t.test for total trips
+t.test(data = df1, trips_pool ~ wait_time)
+
+df2 <- uberdata %>%
+  select(trips_express, wait_time)
+t.test(data = df2, trips_express ~ wait_time)
+
+
+# CLEANUP ####
+
+detach("package:readxl",unload=TRUE)
+detach("package:ggplot2",unload=TRUE)
+detach("package:dplyr",unload=TRUE)
+detach("package:stargazer",unload=TRUE)
+rm(list=ls())
+dev.off()
+cat("\014")
